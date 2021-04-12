@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking} from 'react-native'
+import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking, Share} from 'react-native'
 // import Pulse from 'react-native-pulse'
 
 import Sound from 'react-native-sound';
@@ -19,6 +19,8 @@ import * as ModeStyles from './src/components/styles'
 import * as audioRecorder from './src/components/audioRecorder'
 
 let soundFile = require('./src/assets/files/sounds/censor_beep_1.mp3');
+let soundFile_high = require('./src/assets/files/sounds/censor_beep_2_high.mp3');
+let soundFile_low = require('./src/assets/files/sounds/censor_beep_3_low.mp3');
 let playIcon = {uri: 'play_icon'};
 let pauseIcon = {uri: 'pause_icon'};
 let cancelIcon = {uri: 'cancel_icon'};
@@ -218,6 +220,23 @@ whoosh = new Sound(soundFile, (error) => {
                         />
                       </View>
                     </View>
+                  </Touchable>
+                </View>
+                <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
+                <View style={styles.actionsDropdownItem}>
+                  <Touchable
+                    onPress={()=>{
+                      Share.share({
+                        message: 'Play around with the “Excuse My French” app. Get it now on play store https://play.google.com/store/apps/details?id=com.madebyraymond.excusemyfrench',
+                        title: 'Download the “Excuse My French” app'
+                      },{dialogTitle: 'Share via...'}).catch((e)=>{
+                        if (__DEV__) {
+                          console.log('Error Sharing The App ==> ', e);
+                        }
+                      });
+                    }}
+                  >
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
                   </Touchable>
                 </View>
               </Animatable.View>) : null
