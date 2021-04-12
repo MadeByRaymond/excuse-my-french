@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback} from 'react-native'
+import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking} from 'react-native'
 // import Pulse from 'react-native-pulse'
 
 import Sound from 'react-native-sound';
@@ -87,6 +87,7 @@ export default class App extends Component {
     }, 15000);
     this.setState({
       isPressed: true,
+      displayDropdown: null,
       buttonAnimation:{
         animation: null,
         duration: 6000
@@ -105,6 +106,7 @@ export default class App extends Component {
     clearTimeout(this.thirdSeeker);
     this.setState({
       isPressed: false,
+      displayDropdown: null,
       buttonAnimation:{
         animation: 'pulse',
         duration: 2000
@@ -156,98 +158,102 @@ whoosh = new Sound(soundFile, (error) => {
         {/* <Text>Donate with ads, Donate with money, change sound, record sound during audio</Text> */}
         <View style={styles.attentionSeeker}>{this.state.attentionSeekerJSX}</View>
 
-        <View style={styles.actionWrapper}>
-          <View style={[styles.actionButtonWrapper, {alignItems: 'flex-start',}]}>
-            <View style={styles.actionButton}>
-              <TouchableOpacity onPress={() => this.setState((prevState) => ({displayDropdown: prevState.displayDropdown == 'settings' ? null : 'settings'}))}>
-                <View>
-                  <SettingsSVG height={38} />
-                  <View><Text style={[styles.actionButtonText, mode.actionButtonTextColor]}>Settings</Text></View>
-                </View>
-              </TouchableOpacity>
-            </View>
-            { this.state.displayDropdown == 'settings' ? (
-            <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginLeft: -10}]}>
-              <View style={styles.actionsDropdownItem}>
-                <TouchableNativeFeedback
-                  onPress={()=>{}}
-                >
-                  <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
-                </TouchableNativeFeedback>
-              </View>
-              <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
-              <View style={styles.actionsDropdownItem}>
-                <TouchableNativeFeedback
-                  onPress={()=>this.setState((prevState)=>({playFromPopUp: !prevState.playFromPopUp}))}
-                >
-                  <View style={{flexDirection:'row', alignItems: 'center', justifyContent:'space-between', paddingRight:1}}>
-                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor, {minWidth:0,paddingRight:40}]}>Play from Pop-Up</Text></View> 
-                    <View>
-                      <Switch
-                        trackColor={{ false: "#FFEEB8", true: "#EAA678" }}
-                        thumbColor={this.state.playFromPopUp ? "#FAF0F2" : "#F9CD9A"}
-                        ios_backgroundColor="#FFEEB8"
-                        onValueChange={() => this.setState((prevState)=>({playFromPopUp: !prevState.playFromPopUp}))}
-                        value={this.state.playFromPopUp}
-                      />
-                    </View>
+        <TouchableWithoutFeedback 
+          onPress={()=>this.setState({displayDropdown: null})}
+        >
+          <View style={styles.actionWrapper}>
+            <View style={[styles.actionButtonWrapper, {alignItems: 'flex-start'}]}>
+              <View style={styles.actionButton}>
+                <TouchableOpacity onPress={() => this.setState((prevState) => ({displayDropdown: prevState.displayDropdown == 'settings' ? null : 'settings'}))}>
+                  <View>
+                    <SettingsSVG height={38} />
+                    <View><Text style={[styles.actionButtonText, mode.actionButtonTextColor]}>Settings</Text></View>
                   </View>
-                </TouchableNativeFeedback>
+                </TouchableOpacity>
               </View>
-              <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
-              <View style={styles.actionsDropdownItem}>
-                <TouchableNativeFeedback
-                  onPress={()=>{
-                    this.setState((prevState)=>({darkMode: !prevState.darkMode}),()=>AsyncStorage.setItem('com.excusemyfrench:darkmode', `${this.state.darkMode.toString()}`));
-                  }}
-                >
-                  <View style={{flexDirection:'row', alignItems: 'center', justifyContent:'space-between', paddingRight:1}}>
-                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor, {minWidth:0,paddingRight:40}]}>Dark Mode</Text></View> 
-                    <View>
-                      <Switch
-                        trackColor={{ false: "#FFEEB8", true: "#EAA678" }}
-                        thumbColor={this.state.darkMode ? "#FAF0F2" : "#F9CD9A"}
-                        ios_backgroundColor="#FFEEB8"
-                        onValueChange={() => this.setState((prevState)=>({darkMode: !prevState.darkMode}),()=>AsyncStorage.setItem('com.excusemyfrench:darkmode', `${this.state.darkMode.toString()}`))}
-                        value={this.state.darkMode}
-                      />
-                    </View>
-                  </View>
-                </TouchableNativeFeedback>
-              </View>
-            </Animatable.View>) : null
-            }
-          </View>
-          <View style={[styles.actionButtonWrapper, {alignItems: 'flex-end',}]}>
-            <View style={styles.actionButton}>
-              <TouchableOpacity onPress={() => this.setState((prevState) => ({displayDropdown: prevState.displayDropdown == 'donate' ? null : 'donate'}))}>
-                <View>
-                  <DonateSVG height={38} />
-                  <View><Text style={[styles.actionButtonText, mode.actionButtonTextColor]}>Support</Text></View>
+              { this.state.displayDropdown == 'settings' ? (
+              <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginLeft: -10}]}>
+                <View style={styles.actionsDropdownItem}>
+                  <Touchable
+                    onPress={()=>{}}
+                  >
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
+                  </Touchable>
                 </View>
-              </TouchableOpacity>
+                <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
+                <View style={styles.actionsDropdownItem}>
+                  <Touchable
+                    onPress={()=>this.setState((prevState)=>({playFromPopUp: !prevState.playFromPopUp}))}
+                  >
+                    <View style={{flexDirection:'row', alignItems: 'center', justifyContent:'space-between', paddingRight:1}}>
+                      <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor, {minWidth:0,paddingRight:40}]}>Play from Pop-Up</Text></View> 
+                      <View>
+                        <Switch
+                          trackColor={{ false: "#FFEEB8", true: "#EAA678" }}
+                          thumbColor={this.state.playFromPopUp ? "#FAF0F2" : "#F9CD9A"}
+                          ios_backgroundColor="#FFEEB8"
+                          onValueChange={() => this.setState((prevState)=>({playFromPopUp: !prevState.playFromPopUp}))}
+                          value={this.state.playFromPopUp}
+                        />
+                      </View>
+                    </View>
+                  </Touchable>
+                </View>
+                <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
+                <View style={styles.actionsDropdownItem}>
+                  <Touchable
+                    onPress={()=>{
+                      this.setState((prevState)=>({darkMode: !prevState.darkMode}),()=>AsyncStorage.setItem('com.excusemyfrench:darkmode', `${this.state.darkMode.toString()}`));
+                    }}
+                  >
+                    <View style={{flexDirection:'row', alignItems: 'center', justifyContent:'space-between', paddingRight:1}}>
+                      <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor, {minWidth:0,paddingRight:40}]}>Dark Mode</Text></View> 
+                      <View>
+                        <Switch
+                          trackColor={{ false: "#FFEEB8", true: "#EAA678" }}
+                          thumbColor={this.state.darkMode ? "#FAF0F2" : "#F9CD9A"}
+                          ios_backgroundColor="#FFEEB8"
+                          onValueChange={() => this.setState((prevState)=>({darkMode: !prevState.darkMode}),()=>AsyncStorage.setItem('com.excusemyfrench:darkmode', `${this.state.darkMode.toString()}`))}
+                          value={this.state.darkMode}
+                        />
+                      </View>
+                    </View>
+                  </Touchable>
+                </View>
+              </Animatable.View>) : null
+              }
             </View>
-            { this.state.displayDropdown == 'donate' ? (
-            <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginRight: -10}]}>
-              <View style={styles.actionsDropdownItem}>
-                <TouchableNativeFeedback
-                  onPress={()=>{alert('pie')}}
-                >
-                  <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Support the Developers</Text></View>
-                </TouchableNativeFeedback>
+            <View style={[styles.actionButtonWrapper, {alignItems: 'flex-end'}]}>
+              <View style={styles.actionButton}>
+                <TouchableOpacity onPress={() => this.setState((prevState) => ({displayDropdown: prevState.displayDropdown == 'donate' ? null : 'donate'}))}>
+                  <View>
+                    <DonateSVG height={38} />
+                    <View><Text style={[styles.actionButtonText, mode.actionButtonTextColor]}>Support</Text></View>
+                  </View>
+                </TouchableOpacity>
               </View>
-              <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
-              <View style={styles.actionsDropdownItem}>
-                <TouchableNativeFeedback
-                  onPress={()=>{}}
-                >
-                  <Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Support a Charity ❤️</Text>
-                </TouchableNativeFeedback>
-              </View>
-            </Animatable.View>) : null
-            }
+              { this.state.displayDropdown == 'donate' ? (
+              <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginRight: -10}]}>
+                <View style={styles.actionsDropdownItem}>
+                  <Touchable
+                    onPress={()=>{this.setState({displayDropdown: null}); Linking.openURL('https://www.buymeacoffee.com/MadeByRaymond')}}
+                  >
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Support the Developers</Text></View>
+                  </Touchable>
+                </View>
+                <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
+                <View style={styles.actionsDropdownItem}>
+                  <Touchable
+                    onPress={()=>{this.setState({displayDropdown: null}); Linking.openURL('https://donate.givedirect.org/?cid=710')}}
+                  >
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Support a Charity ❤️</Text></View>
+                  </Touchable>
+                </View>
+              </Animatable.View>) : null
+              }
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
         
         <Animatable.View animation={this.state.buttonAnimation.animation} duration={this.state.buttonAnimation.duration} easing="ease-out" iterationCount="infinite" style={styles.soundButton}>
           <Touchable background={Touchable.Ripple('#C06A46', true)} style={{borderRadius:0, backgroundColor: 'red'}} onPressIn={this.handlePressIn} onPressOut={this.handlePressOut} >
