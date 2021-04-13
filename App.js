@@ -17,6 +17,7 @@ import {
 
 import * as ModeStyles from './src/components/styles'
 import * as audioRecorder from './src/components/audioRecorder'
+import { morser } from "./src/components/morser";
 
 let soundFile = require('./src/assets/files/sounds/censor_beep_1.mp3');
 let soundFile_high = require('./src/assets/files/sounds/censor_beep_2_high.mp3');
@@ -177,7 +178,18 @@ whoosh = new Sound(soundFile, (error) => {
               <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginLeft: -10}]}>
                 <View style={styles.actionsDropdownItem}>
                   <Touchable
-                    onPress={()=>{}}
+                    onPress={()=>{
+                      let textArray = morser('Hello Works').split("");
+                      textArray.forEach((char, i) => {
+                        if(textArray.length != (i+1)) {
+                          if (char == '.') {
+                            this.whoosh.stop();
+                          }
+                        }else{
+                          this.whoosh.play();
+                        }
+                      });
+                    }}
                   >
                     <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
                   </Touchable>
