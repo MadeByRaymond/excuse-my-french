@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Excuse My French</string>
+    <string name="appwidget_text">HELLO</string>
+    <string name="add_widget">Add widget</string>
 </resources>
