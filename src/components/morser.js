@@ -60,14 +60,25 @@ export const morser = (text = "") => {
 }
 
 
-// function sleep(ms) {
-//     return new Promise(resolve => setTimeout(resolve, ms));
-//  }
-//  async function Tutor() {
-//     document.write('Hello Toturix');
-//     for (let i = 1; i <20 ; i++) {        
-//        await sleep(3000);
-//        document.write( i +" "+"Welcome to tutorix" + " " + "</br>");
-//     }
-//  }
-//  Tutor()
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+ }
+
+ export const morserPlayer = async (array, whoosh) => {
+  console.log('Hello Toturix');
+    for (let i = 0; i < array.length ; i++) {        
+       await sleep(100);
+       if(array.length != (i+1)) {
+        if (array[i] == '.') {
+          console.log(array[i])
+          whoosh.stop();
+          await sleep(80);
+          whoosh.play();
+        }else{
+          whoosh.isPlaying() ? null : whoosh.play()
+        }
+      }else{
+        whoosh.play();
+      }
+    }
+ }

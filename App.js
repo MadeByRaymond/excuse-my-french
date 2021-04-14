@@ -17,7 +17,7 @@ import {
 
 import * as ModeStyles from './src/components/styles'
 import * as audioRecorder from './src/components/audioRecorder'
-import { morser } from "./src/components/morser";
+import { morser, morserPlayer } from "./src/components/morser";
 
 let soundFile = require('./src/assets/files/sounds/censor_beep_1.mp3');
 let soundFile_high = require('./src/assets/files/sounds/censor_beep_2_high.mp3');
@@ -180,15 +180,25 @@ whoosh = new Sound(soundFile, (error) => {
                   <Touchable
                     onPress={()=>{
                       let textArray = morser('Hello Works').split("");
-                      textArray.forEach((char, i) => {
-                        if(textArray.length != (i+1)) {
-                          if (char == '.') {
-                            this.whoosh.stop();
-                          }
-                        }else{
-                          this.whoosh.play();
-                        }
-                      });
+                      console.log(textArray)
+                      this.whoosh.play()
+                      morserPlayer(textArray, this.whoosh).then((res)=>{
+                        console.log(res)
+                      })
+                      // textArray.forEach((char, i) => {
+                      //   if(textArray.length != (i+1)) {
+                      //     if (char == '.') {
+                      //       console.log(char)
+                      //       this.whoosh.stop();
+                      //       this.whoosh.release();
+                      //     }else{
+                      //       this.whoosh.play()
+                            
+                      //     }
+                      //   }else{
+                      //     this.whoosh.play();
+                      //   }
+                      // });
                     }}
                   >
                     <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
@@ -248,7 +258,7 @@ whoosh = new Sound(soundFile, (error) => {
                       });
                     }}
                   >
-                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Share with a Friend</Text></View>
                   </Touchable>
                 </View>
               </Animatable.View>) : null
