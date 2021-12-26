@@ -6,12 +6,13 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
+    "reset": "react-native run-android -- --reset-cache",
     "test": "jest",
     "lint": "eslint .",
-    "reset": "react-native run-android -- --reset-cache",
     "clear-all": "npm cache clean --force && npm install && npm start -- --reset-cache",
     "clean-android": "cd android && gradlew clean && cd ..",
-    "clean-assemble-android": "cd android && gradlew clean assembleDebug && cd .."
+    "clean-assemble-android": "cd android && gradlew clean assembleDebug && cd ..",
+    "bundle-release": "cd android && gradlew bundleRelease"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.15.2",
