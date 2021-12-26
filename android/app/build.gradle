@@ -132,8 +132,8 @@ android {
         applicationId "com.madebyraymond.excusemyfrench"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 100
+        versionName "1.0.0"
     }
     splits {
         abi {
@@ -153,10 +153,10 @@ android {
 
         release {
             if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
-                storeFile file(MYAPP_UPLOAD_STORE_FILE)
-                storePassword MYAPP_UPLOAD_STORE_PASSWORD
-                keyAlias MYAPP_UPLOAD_KEY_ALIAS
-                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+                storeFile file('my-upload-key.keystore')
+                storePassword 'android'
+                keyAlias 'my-key-alias'
+                keyPassword 'android'
             }
         }
     }
@@ -203,6 +203,11 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+
+    // Google Play Core Library
+    implementation "com.google.android.play:core:1.10.2"
+    // For Kotlin users also import the Kotlin extensions library for Play Core:
+    implementation "com.google.android.play:core-ktx:1.8.1"
     
     // For support of Android versions before Ice Cream Sandwich (API level 14)
     implementation 'com.facebook.fresco:animated-base-support:1.3.0'
