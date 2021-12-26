@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking, Share} from 'react-native'
+import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking, Share, TextInput, Animated} from 'react-native'
 // import Pulse from 'react-native-pulse'
 
 import Sound from 'react-native-sound';
@@ -10,18 +10,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Pulse from './src/UI/PulseUI/pulse';
 import { 
   wavesSVG as WavesSVG, 
-  creditSVG, 
+  creditSVG as Credits, 
   donateSVG as DonateSVG,
   settingsSVG as SettingsSVG
 } from './src/UI/svgUI';
 
 import * as ModeStyles from './src/components/styles'
 import * as audioRecorder from './src/components/audioRecorder'
-import { morser, morserPlayer } from "./src/components/morser";
+import MorseCodeModal from './src/components/morserModal';
+import ChangeSoundModal from './src/components/changeSoundModal';
 
 let soundFile = require('./src/assets/files/sounds/censor_beep_1.mp3');
 let soundFile_high = require('./src/assets/files/sounds/censor_beep_2_high.mp3');
 let soundFile_low = require('./src/assets/files/sounds/censor_beep_3_low.mp3');
+let soundFile_dog_12200hz = require('./src/assets/files/sounds/Dog-whistle-sound-12.200-Hz.mp3');
+let soundFile_dog_16000hz = require('./src/assets/files/sounds/Dog-whistle-sound-16.000-Hz.mp3');
 let playIcon = {uri: 'play_icon'};
 let pauseIcon = {uri: 'pause_icon'};
 let cancelIcon = {uri: 'cancel_icon'};
@@ -38,9 +41,18 @@ const thirdSeekerArray = ['🙉', '🤬', '🤯', '😡'];
 const finalSeekerArray = ['😅', '😒', '😇'];
 
 export default class App extends Component {
+  censorPlayback = new Sound(soundFile);
+
   state = {
     isPressed : false,
+    morseCodeModal: false,
+    changeSoundModal: false,
     pulseNumber: 0,
+
+    censorPlaybackShow: false,
+    censorPlaybackCurrentTime: 0,
+    censorPlaybackIsPlaying: false,
+
     attentionSeekerJSX: (
       <Text style={styles.attentionSeekerText}></Text>
     ),
@@ -52,6 +64,16 @@ export default class App extends Component {
     displayDropdown: null,
     playFromPopUp: false,
     darkMode: false,
+    soundFiles: {
+      files:{
+        normal: soundFile,
+        low: soundFile_low,
+        high: soundFile_high,
+        dog_whistle_12200Hz: soundFile_dog_12200hz,
+        dog_whistle_16000Hz: soundFile_dog_16000hz
+      },
+      activeSound: 'normal'
+    }
   }
 
   componentDidMount(){
@@ -61,12 +83,36 @@ export default class App extends Component {
       this.setState({darkMode: false});
       AsyncStorage.setItem('com.excusemyfrench:darkmode','false')
     })
+
+    AsyncStorage.getItem('com.excusemyfrench:soundFile').then((value)=>{
+      if (value) {
+        this.beepSound = new Sound(this.state.soundFiles.files[value], (error) => {
+          if (error) {
+            if (__DEV__) console.log('failed to load the sound', error);
+            // return;
+          }else{
+            this.setState(prevState => ({soundFiles:{...prevState.soundFiles,activeSound: value}}))
+          }
+        });
+      }else{
+        throw 'No value saved'
+      }
+    }).catch(()=>{
+      AsyncStorage.setItem('com.excusemyfrench:soundFile',this.state.soundFiles.activeSound)
+    })
+  }
+
+  componentWillUnmount(){
+    this.censorPlayback.release();
+    this.beepSound.release();
   }
 
 
   handlePressIn = () =>{
-    this.whoosh.play();
-    audioRecorder.onStartRecord();
+    this.beepSound.play();
+    audioRecorder.onStartRecord().catch((e)=>{
+      if(__DEV__) console.log(e);
+    });
     this.firstSeeker = setTimeout(() =>{
       this.setState({
         attentionSeekerJSX: (
@@ -99,9 +145,26 @@ export default class App extends Component {
   }
 
   handlePressOut = () =>{
-    this.whoosh.stop();
-    audioRecorder.onStopRecord().then(()=>{
-      audioRecorder.onStartPlay()
+    this.beepSound.stop();
+    audioRecorder.onStopRecord().then((soundFile)=>{
+      // audioRecorder.onStartPlay();
+      // console.log('my sound, ==> ', soundFile);
+      this.censorPlayback = new Sound(soundFile, Sound.CACHES, (error) => {
+        if (error) {
+          if (__DEV__) console.log('failed to load the sound', error);
+        }else{
+          this.censorPlayback.setNumberOfLoops(0);
+          this.censorPlayback.getCurrentTime(sec => {
+            this.setState({
+              censorPlaybackShow: true,
+              censorPlaybackCurrentTime: sec,
+            });
+          })
+          
+        }
+      });
+    }).catch((e)=>{
+      if(__DEV__) console.log(e);
     })
     
     clearTimeout(this.firstSeeker);
@@ -121,19 +184,21 @@ export default class App extends Component {
     });
   }
 
+  
+
 
 // Load the sound file 'whoosh.mp3' from the app bundle
 // See notes below about preloading sounds within initialization code below.
-whoosh = new Sound(soundFile, (error) => {
+beepSound = new Sound(this.state.soundFiles.files[this.state.soundFiles.activeSound], (error) => {
   if (error) {
-    console.log('failed to load the sound', error);
+    if (__DEV__) console.log('failed to load the sound', error);
     return;
   }
   // // loaded successfully
-  // console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+  // console.log('duration in seconds: ' + beepSound.getDuration() + 'number of channels: ' + beepSound.getNumberOfChannels());
 
   // // Play the sound with an onEnd callback
-  // whoosh.play((success) => {
+  // beepSound.play((success) => {
   //   if (success) {
   //     console.log('successfully finished playing');
   //   } else {
@@ -145,20 +210,49 @@ whoosh = new Sound(soundFile, (error) => {
  
   render() {
     // alert(mbrSVG)
-    let Credits = creditSVG;
-    this.whoosh.setNumberOfLoops(-1);
+    this.beepSound.setNumberOfLoops(-1);
     let Touchable = Platform.OS === 'android' ? TouchableNativeFeedback : TouchableOpacity;
 
     let pulseNumber = this.state.pulseNumber;
 
     let mode = this.state.darkMode ? ModeStyles['darkModeStyles'] : ModeStyles['lightModeStyles']
+
+    // console.log('Status ==> ',this.state.censorPlaybackCurrentTime);
     
     return (
       <View style={[styles.container, mode.containerColor]}>
+        <MorseCodeModal 
+          isVisible={this.state.morseCodeModal}
+          closeModalFunc = {(cb) => this.setState({morseCodeModal: false}, cb)}
+          beepSound = {this.beepSound}
+          darkMode = {this.state.darkMode}
+        />
+
+        <ChangeSoundModal
+          isVisible={this.state.changeSoundModal}
+          closeModalFunc = {(cb) => this.setState({changeSoundModal: false}, cb)}
+          darkMode = {this.state.darkMode}
+
+          soundFiles = {this.state.soundFiles}
+          setActiveSound = {(soundKey) => {
+            this.beepSound = new Sound(this.state.soundFiles.files[soundKey], (error) => {
+              if (error) {
+                if (__DEV__) console.log('failed to load the sound', error);
+                // return;
+              }else{
+                this.setState(prevState => ({soundFiles:{...prevState.soundFiles,activeSound: soundKey}}))
+                AsyncStorage.setItem('com.excusemyfrench:soundFile', soundKey);
+              }
+            });
+          }}
+        />
+
         <TouchableWithoutFeedback 
           onPress={()=>this.setState({displayDropdown: null})}
-        ><View style={styles.touchableContainer}></View></TouchableWithoutFeedback>
-        {/* <Text>Donate with ads, Donate with money, change sound, record sound during audio</Text> */}
+        >
+          <View style={styles.touchableContainer}></View>
+        </TouchableWithoutFeedback>
+
         <View style={styles.attentionSeeker}>{this.state.attentionSeekerJSX}</View>
 
         <TouchableWithoutFeedback 
@@ -177,34 +271,17 @@ whoosh = new Sound(soundFile, (error) => {
               { this.state.displayDropdown == 'settings' ? (
               <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginLeft: -10}]}>
                 <View style={styles.actionsDropdownItem}>
-                  <Touchable
-                    onPress={()=>{
-                      let textArray = morser('Hello Works').split("");
-                      console.log(textArray)
-                      this.whoosh.play()
-                      morserPlayer(textArray, this.whoosh).then((res)=>{
-                        console.log(res)
-                      })
-                      // textArray.forEach((char, i) => {
-                      //   if(textArray.length != (i+1)) {
-                      //     if (char == '.') {
-                      //       console.log(char)
-                      //       this.whoosh.stop();
-                      //       this.whoosh.release();
-                      //     }else{
-                      //       this.whoosh.play()
-                            
-                      //     }
-                      //   }else{
-                      //     this.whoosh.play();
-                      //   }
-                      // });
-                    }}
-                  >
-                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
+                  <Touchable onPress={()=> this.setState({morseCodeModal: true, displayDropdown: null})}>
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Morse Code</Text></View>
                   </Touchable>
                 </View>
                 <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
+                <View style={styles.actionsDropdownItem}>
+                <Touchable onPress={()=> this.setState({changeSoundModal: true, displayDropdown: null})}>
+                    <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Change Sound</Text></View>
+                  </Touchable>
+                </View>
+                {/* <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
                 <View style={styles.actionsDropdownItem}>
                   <Touchable
                     onPress={()=>this.setState((prevState)=>({playFromPopUp: !prevState.playFromPopUp}))}
@@ -222,7 +299,7 @@ whoosh = new Sound(soundFile, (error) => {
                       </View>
                     </View>
                   </Touchable>
-                </View>
+                </View> */}
                 <View style={[styles.actionsDropdownItemDivider, mode.actionsDropdownItemDividerColor]}></View>
                 <View style={styles.actionsDropdownItem}>
                   <Touchable
@@ -248,13 +325,12 @@ whoosh = new Sound(soundFile, (error) => {
                 <View style={styles.actionsDropdownItem}>
                   <Touchable
                     onPress={()=>{
+                      this.setState({displayDropdown: null});
                       Share.share({
                         message: 'Play around with the “Excuse My French” app. Get it now on play store https://play.google.com/store/apps/details?id=com.madebyraymond.excusemyfrench',
                         title: 'Download the “Excuse My French” app'
                       },{dialogTitle: 'Share via...'}).catch((e)=>{
-                        if (__DEV__) {
-                          console.log('Error Sharing The App ==> ', e);
-                        }
+                        if (__DEV__) console.log('Error Sharing The App ==> ', e);
                       });
                     }}
                   >
@@ -304,17 +380,72 @@ whoosh = new Sound(soundFile, (error) => {
           </Touchable>
         </Animatable.View>
 
-        <View style={{width: 250, backgroundColor:'#FFC477', borderRadius:10, overflow: 'hidden', position: 'absolute', top: (dHeight - (dHeight/4))}}>
-          <View style={{width: 250, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal:15, paddingVertical: 15}}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Image source={playIcon} resizeMode='contain' style={{height:20, width: 20}} />
-              <View><Text style={{color:'#3B455A', fontSize: 16, marginLeft: 10}}>Replay Sound</Text></View>
+        {this.state.censorPlaybackShow ? (
+          <View style={{width: 250, backgroundColor:'#FFC477', borderRadius:10, overflow: 'hidden', position: 'absolute', top: (dHeight - (dHeight/4))}}>
+            <View style={{width: 250, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal:15, paddingVertical: 15, zIndex: 1}}>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <TouchableOpacity hitSlop={{top: 20, left: 20, bottom: 20, right: 20}} activeOpacity={0.5} onPress={() => {
+                  console.log('Is Playing ==> ', this.censorPlayback.isPlaying())
+                  if(this.censorPlayback.isPlaying()){
+                    this.censorPlayback.pause(() => this.setState({censorPlaybackIsPlaying: false}));
+                    clearInterval(this.censorPlaybackTimeout);
+                  }else{
+                    this.censorPlayback.play((success)=>{
+                      this.censorPlayback.stop();
+                      clearInterval(this.censorPlaybackTimeout);
+                      this.setState({
+                        censorPlaybackCurrentTime: this.censorPlayback.getDuration(),
+                        censorPlaybackIsPlaying: false
+                      })
+                      // console.log(success)
+                    });
+
+                    this.censorPlaybackTimeout = setInterval(() => {
+                      // console.log('still playing')
+                      if(this.censorPlayback.isPlaying){
+                        this.censorPlayback.getCurrentTime(sec => {
+                          this.setState({
+                            censorPlaybackCurrentTime: sec,
+                            censorPlaybackIsPlaying: true
+                          });
+                        })
+                      }else{
+                        clearInterval(this.censorPlaybackTimeout);
+                      }
+                    }, 100);
+                  }
+                }}><Image source={this.state.censorPlaybackIsPlaying ? pauseIcon : playIcon} resizeMode='contain' style={{height:20, width: 20}} /></TouchableOpacity>
+                <View><Text style={{color:'#3B455A', fontSize: 16, marginLeft: 10}}>Replay Sound</Text></View>
+              </View>
+              <TouchableOpacity hitSlop={{top: 20, left: 20, bottom: 20, right: 20}} activeOpacity={0.5} onPress={() => {
+                this.censorPlayback.isPlaying ? this.censorPlayback.stop() : null;
+                clearInterval(this.censorPlaybackTimeout);
+                this.setState({
+                  censorPlaybackShow: false,
+                  censorPlaybackCurrentTime: 0,
+                  censorPlaybackIsPlaying: false
+                })
+              }}>
+                <Image source={cancelIcon} resizeMode='contain' style={{height:20, width: 20}} />
+              </TouchableOpacity>
             </View>
-            <View>
-              <Image source={cancelIcon} resizeMode='contain' style={{height:20, width: 20}} />
-            </View>
+            <Animated.View
+              style={{
+                height: '100%',
+                width: (250 * (this.state.censorPlaybackCurrentTime / this.censorPlayback.getDuration())),
+                
+                backgroundColor: "#EAA678",
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                zIndex: 0
+              }}
+            ></Animated.View>
           </View>
-        </View>
+        ) : null}
+        
+
         {
           this.state.isPressed ? 
           <Pulse color='rgba(192, 106, 70, 0.7)' numPulses={4} diameter={750} initialDiameter={200} speed={1} duration={1500} />

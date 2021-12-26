@@ -20,7 +20,15 @@ export const lightModeStyles = StyleSheet.create({
     },
     actionsDropdownItemTextColor:{
       color: '#3B455A',
-    }
+    },
+  
+  
+    modalBg:{
+      backgroundColor: '#FFF7F8'
+    },
+    textColor:{
+      color: '#3B455A'
+    },
   
   });
 
@@ -44,6 +52,14 @@ export const darkModeStyles = StyleSheet.create({
     },
     actionsDropdownItemTextColor:{
       color: '#FFFFFF',
-    }
+    },
+  
+  
+    modalBg:{
+      backgroundColor: '#22303C'
+    },
+    textColor:{
+      color: '#fff'
+    },
   
   });

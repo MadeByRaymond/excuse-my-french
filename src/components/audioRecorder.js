@@ -5,61 +5,74 @@ import AudioRecorderPlayer, {
   // AudioSet,
   AudioSourceAndroidType, 
  } from 'react-native-audio-recorder-player';
+ import {Platform} from 'react-native';
+ import RNFetchBlob from 'rn-fetch-blob'
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 audioRecorderPlayer.setVolume(1.0);
 
+const path = Platform.select({
+  ios: 'excuse_my_french_rec_temp.m4a',
+  android: `${RNFetchBlob.fs.dirs.CacheDir}/excuse_my_french_rec_temp.mp4`,
+})
+
 export const onStartRecord = async () => {
-  const audioSet = {
-    AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
-    AudioSourceAndroid: 10,
-    AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
-    AVNumberOfChannelsKeyIOS: 2,
-    AVFormatIDKeyIOS: AVEncodingOption.aac,
-  };
-  const result = await audioRecorderPlayer.startRecorder('sdcard/temp.mp4',audioSet);
-  audioRecorderPlayer.addRecordBackListener((e) => {
-    // this.setState({
-    //   recordSecs: e.current_position,
-    //   recordTime: audioRecorderPlayer.mmssss(
-    //     Math.floor(e.current_position),
-    //   ),
-    // });
-    // return;
-  });
-  console.log('Start Result ==> ',result);
+  try {
+    const audioSet = {
+      AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+      AudioSourceAndroid: AudioSourceAndroidType.MIC,
+      AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+      AVNumberOfChannelsKeyIOS: 2,
+      AVFormatIDKeyIOS: AVEncodingOption.aac,
+    };
+    
+    const result = await audioRecorderPlayer.startRecorder(path, audioSet);
+    audioRecorderPlayer.addRecordBackListener((e) => { });
+    // console.log('Start Result ==> ',result);
+  } catch (error) {
+    // if (__DEV__) console.log('Error ==> ', error);
+    throw error
+  }
 };
 
 export const onStopRecord = async () => {
-  const result = await audioRecorderPlayer.stopRecorder();
-  audioRecorderPlayer.removeRecordBackListener();
-  // this.setState({
-  //   recordSecs: 0,
-  // });
-  console.log('Stop Result ==> ',result);
+  try {
+    const result = await audioRecorderPlayer.stopRecorder();
+    audioRecorderPlayer.removeRecordBackListener((e) => { });
+    
+    // console.log('Stop Result ==> ',result);
+    return path
+  } catch (error) {
+    // if (__DEV__) console.log('Error ==> ', error);
+    throw error
+  }
 };
 
-export const onStartPlay = async () => {
-  console.log('onStartPlay');
-  const msg = await audioRecorderPlayer.startPlayer('sdcard/temp.mp4');
-  console.log('Play Result ==> ',msg);
-  // audioRecorderPlayer.addPlayBackListener((e) => {
-  //   this.setState({
-  //     currentPositionSec: e.current_position,
-  //     currentDurationSec: e.duration,
-  //     playTime: audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
-  //     duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
-  //   });
-  //   return;
-  // });
-};
+// export const onStartPlay = async () => {
+//   try {
+//     console.log('onStartPlay ==> ', path);
+//     const msg = await audioRecorderPlayer.startPlayer(path);
+//     console.log('Play Result ==> ',msg);
+//     // audioRecorderPlayer.addPlayBackListener((e) => {
+//     //   this.setState({
+//     //     currentPositionSec: e.current_position,
+//     //     currentDurationSec: e.duration,
+//     //     playTime: audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
+//     //     duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+//     //   });
+//     //   return;
+//     // });
+//   } catch (error) {
+//     if (__DEV__) console.log('Error ==> ', error);
+//   }
+// };
 
-export const onPausePlay = async () => {
-  await audioRecorderPlayer.pausePlayer();
-};
+// export const onPausePlay = async () => {
+//   await audioRecorderPlayer.pausePlayer();
+// };
 
-export const onStopPlay = async () => {
-  console.log('onStopPlay');
-  audioRecorderPlayer.stopPlayer();
-  audioRecorderPlayer.removePlayBackListener();
-};
+// export const onStopPlay = async () => {
+//   console.log('onStopPlay');
+//   audioRecorderPlayer.stopPlayer();
+//   audioRecorderPlayer.removePlayBackListener();
+// };
