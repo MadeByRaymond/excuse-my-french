@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, Dimensions, TouchableNativeFeedback, TouchableWithoutFeedback, View, TouchableOpacity } from 'react-native'
+import React from 'react';
+import { StyleSheet, Text, Dimensions, TouchableNativeFeedback, View, TouchableOpacity } from 'react-native'
 
 import Modal from "react-native-modal";
 

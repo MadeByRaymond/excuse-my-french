@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
-import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking, Share, TextInput, Animated} from 'react-native'
+import { Text, View, StyleSheet, Platform, TouchableNativeFeedback, TouchableOpacity, Dimensions, Switch, Image, TouchableWithoutFeedback, Linking, Share, PermissionsAndroid, Animated, StatusBar} from 'react-native'
 // import Pulse from 'react-native-pulse'
-
+import SystemNavigationBar from "react-native-system-navigation-bar";
+import NavigationBar from 'react-native-navbar-color'
 import Sound from 'react-native-sound';
 import * as Animatable from 'react-native-animatable';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -107,12 +108,37 @@ export default class App extends Component {
     this.beepSound.release();
   }
 
+  checkPermission = async() => {
+    if (Platform.OS !== 'android') {
+        return Promise.resolve(true);
+    }
+    let result;
+    try {
+        result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, { title:'Microphone Permission', message:'"Excuse My French" app needs access to your microphone so we can replay your sound.', buttonNeutral: 'Ask Me Later', buttonNegative: 'Cancel', buttonPositive: 'Ok' });
+    } catch(error) {
+      if(__DEV__)  console.error('failed getting permission, result:', result);
+      // throw `failed getting permission, result: ${result}`;
+    }
+    if(__DEV__)  console.log('permission result:', result);
+    return (result === true || result === PermissionsAndroid.RESULTS.GRANTED);
+  }
 
   handlePressIn = () =>{
     this.beepSound.play();
-    audioRecorder.onStartRecord().catch((e)=>{
-      if(__DEV__) console.log(e);
-    });
+
+    if(this.censorPlayback.isPlaying()){
+      this.censorPlayback.pause(() => this.setState({censorPlaybackIsPlaying: false}));
+      clearInterval(this.censorPlaybackTimeout);
+    }
+    
+    this.checkPermission().then(hasPermissions => {
+      if (hasPermissions) {
+        audioRecorder.onStartRecord().catch((e)=>{
+          if(__DEV__) console.log(e);
+        });
+      }
+    })
+
     this.firstSeeker = setTimeout(() =>{
       this.setState({
         attentionSeekerJSX: (
@@ -146,25 +172,31 @@ export default class App extends Component {
 
   handlePressOut = () =>{
     this.beepSound.stop();
-    audioRecorder.onStopRecord().then((soundFile)=>{
-      // audioRecorder.onStartPlay();
-      // console.log('my sound, ==> ', soundFile);
-      this.censorPlayback = new Sound(soundFile, Sound.CACHES, (error) => {
-        if (error) {
-          if (__DEV__) console.log('failed to load the sound', error);
-        }else{
-          this.censorPlayback.setNumberOfLoops(0);
-          this.censorPlayback.getCurrentTime(sec => {
-            this.setState({
-              censorPlaybackShow: true,
-              censorPlaybackCurrentTime: sec,
-            });
-          })
-          
+
+    this.checkPermission().then(hasPermissions => {
+      audioRecorder.onStopRecord().then((soundFile)=>{
+        // audioRecorder.onStartPlay();
+        // console.log('my sound, ==> ', soundFile);
+        if (hasPermissions) {
+          this.censorPlayback = new Sound(soundFile, Sound.CACHES, (error) => {
+            if (error) {
+              if (__DEV__) console.log('failed to load the sound', error);
+            }else{
+              this.censorPlayback.setNumberOfLoops(0);
+              this.censorPlayback.getCurrentTime(sec => {
+                this.setState({
+                  censorPlaybackShow: true,
+                  censorPlaybackCurrentTime: sec,
+                });
+              })
+              
+            }
+          });
         }
-      });
-    }).catch((e)=>{
-      if(__DEV__) console.log(e);
+      }).catch((e)=>{
+        if(__DEV__) console.log(e);
+      })
+      
     })
     
     clearTimeout(this.firstSeeker);
@@ -215,7 +247,12 @@ beepSound = new Sound(this.state.soundFiles.files[this.state.soundFiles.activeSo
 
     let pulseNumber = this.state.pulseNumber;
 
-    let mode = this.state.darkMode ? ModeStyles['darkModeStyles'] : ModeStyles['lightModeStyles']
+    let mode = this.state.darkMode ? ModeStyles['darkModeStyles'] : ModeStyles['lightModeStyles'];
+
+    
+    NavigationBar.setColor(mode.containerColor.backgroundColor);
+    SystemNavigationBar.lightNavigationBar(this.state.darkMode);
+   
 
     // console.log('Status ==> ',this.state.censorPlaybackCurrentTime);
     
@@ -227,6 +264,8 @@ beepSound = new Sound(this.state.soundFiles.files[this.state.soundFiles.activeSo
           beepSound = {this.beepSound}
           darkMode = {this.state.darkMode}
         />
+
+        <StatusBar animated={true} backgroundColor={mode.containerColor.backgroundColor} barStyle={this.state.darkMode ? "light-content" : "dark-content"} />
 
         <ChangeSoundModal
           isVisible={this.state.changeSoundModal}
@@ -385,7 +424,7 @@ beepSound = new Sound(this.state.soundFiles.files[this.state.soundFiles.activeSo
             <View style={{width: 250, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingHorizontal:15, paddingVertical: 15, zIndex: 1}}>
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <TouchableOpacity hitSlop={{top: 20, left: 20, bottom: 20, right: 20}} activeOpacity={0.5} onPress={() => {
-                  console.log('Is Playing ==> ', this.censorPlayback.isPlaying())
+                  if(__DEV__) console.log('Is Playing ==> ', this.censorPlayback.isPlaying())
                   if(this.censorPlayback.isPlaying()){
                     this.censorPlayback.pause(() => this.setState({censorPlaybackIsPlaying: false}));
                     clearInterval(this.censorPlaybackTimeout);

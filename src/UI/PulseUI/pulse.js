@@ -4,7 +4,6 @@ import React, {
   import PropTypes from 'prop-types';
   import {
     View,
-    Text,
     Image,
     StyleSheet,
   } from 'react-native';

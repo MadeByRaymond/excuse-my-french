@@ -132,8 +132,8 @@ android {
         applicationId "com.madebyraymond.excusemyfrench"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 100
-        versionName "1.0.0"
+        versionCode 101
+        versionName "1.0.1"
     }
     splits {
         abi {

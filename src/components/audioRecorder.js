@@ -9,7 +9,7 @@ import AudioRecorderPlayer, {
  import RNFetchBlob from 'rn-fetch-blob'
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
-audioRecorderPlayer.setVolume(1.0);
+audioRecorderPlayer.setVolume(1.0).catch(e => { if (__DEV__) console.log('Error: Cannot set recorder volume ==> ', e);});
 
 const path = Platform.select({
   ios: 'excuse_my_french_rec_temp.m4a',

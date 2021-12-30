@@ -88,12 +88,11 @@ import SpInAppUpdates, {
 AppRegistry.registerComponent(appName, () => App);
 
 
-  
   const inAppUpdates = new SpInAppUpdates(
     false // isDebug
   );
   // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
-  inAppUpdates.checkNeedsUpdate({ curVersion: '1.0.0' }).then((result) => {
+  inAppUpdates.checkNeedsUpdate({ curVersion: '1.0.1' }).then((result) => {
     if (result.shouldUpdate) {
       let updateOptions = {};
       if (Platform.OS === 'android') {
