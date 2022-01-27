@@ -392,7 +392,7 @@ beepSound = new Sound(this.state.soundFiles.files[this.state.soundFiles.activeSo
               <Animatable.View animation='fadeInUp' duration={200} easing="ease-out" style={[styles.actionsDropdown, mode.actionsDropdownColor, {marginRight: -10}]}>
                 <View style={styles.actionsDropdownItem}>
                   <Touchable
-                    onPress={()=>{this.setState({displayDropdown: null}); Linking.openURL('https://www.buymeacoffee.com/MadeByRaymond')}}
+                    onPress={()=>{this.setState({displayDropdown: null}); Linking.openURL('https://madebyraymond.herokuapp.com/donation_support.html')}}
                   >
                     <View><Text style={[styles.actionsDropdownItemText, mode.actionsDropdownItemTextColor]}>Support the Developers</Text></View>
                   </Touchable>
