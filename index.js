@@ -12,6 +12,9 @@ import SpInAppUpdates, {
     StartUpdateOptions,
   } from 'sp-react-native-in-app-updates';
 
+import InAppReview from 'react-native-in-app-review';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // import {PERMISSIONS} from 'react-native-permissions';
 
 // if (Platform.OS === 'android') {
@@ -92,11 +95,11 @@ AppRegistry.registerComponent(appName, () => App);
     false // isDebug
   );
   // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
-  inAppUpdates.checkNeedsUpdate({ curVersion: '1.0.1' }).then((result) => {
+  inAppUpdates.checkNeedsUpdate({ curVersion: '1.1.0' }).then((result) => {
     if (result.shouldUpdate) {
       let updateOptions = {};
       if (Platform.OS === 'android') {
-        // android only, on iOS the user will be promped to go to your app store page
+        // android only, on iOS the user will be prompted to go to your app store page
         updateOptions = {
           updateType: IAUUpdateKind.FLEXIBLE,
         };
@@ -105,4 +108,19 @@ AppRegistry.registerComponent(appName, () => App);
     }
   }).catch((e) =>{
       if(__DEV__) console.log("Error ==> ", e);
+  }).finally(async () =>{
+    if (InAppReview.isAvailable()) {
+      let openCount = parseInt(await AsyncStorage.getItem('com.excusemyfrench:appOpenCount'))
+      
+      openCount = (typeof openCount == 'number') ? isNaN(openCount) ? 0 : openCount : 0;
+      
+      if ((openCount == 5 || openCount == 15 || openCount == 64 || openCount == 256 || openCount == 1024 || openCount == 4096)) {
+        InAppReview.RequestInAppReview()
+        .catch((e) => {
+          if(__DEV__) console.log("InApp Review Error ==> ", e);
+        })
+      }
+      
+      await AsyncStorage.setItem('com.excusemyfrench:appOpenCount', `${openCount + 1}`)
+    }
   });
